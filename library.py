@@ -4,7 +4,7 @@ conn = sqlite3.connect("library.db")
 cursor = conn.cursor()
 
 cursor.execute('''
-    CREATE TABLE IF NOT EXISTS genre (
+    CREATE TABLE IF NOT EXISTS genres (
         id INTEGER PRIMARY KEY,
         type TEXT NOT NULL
     );
@@ -17,7 +17,8 @@ cursor.execute('''
         author TEXT NOT NULL,
         pub_year INTEGER,
         genre TEXT,
+        ISBN INTEGER,
         FOREIGN KEY (genre)
-        REFERENCES genre.type (genre)
+        REFERENCES genres(type)
     );
 ''')
