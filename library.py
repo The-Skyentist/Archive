@@ -1,4 +1,5 @@
 import sqlite3
+import requests
 
 conn = sqlite3.connect("library.db")
 cursor = conn.cursor()
