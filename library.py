@@ -19,4 +19,4 @@ def book_search(title = "", author = "", isbn = ""):
     r = requests.get(APIurl, params=new_params)
     print(r.url)
 
-book_search("frankenstein", "mary")
+book_search("frankenstein","","123456789")
