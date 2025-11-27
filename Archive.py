@@ -11,7 +11,7 @@ cursor = conn.cursor()
 
 #SQL table to sort through entries, using ids from each to reduce search sizes
 cursor.execute('''
-    CREATE TABLE IF NOT EXISTS books (
+    CREATE TABLE IF NOT EXISTS book_list (
         id PRIMARY KEY,
         title TEXT NOT NULL,
         author TEXT NOT NULL,
@@ -98,7 +98,7 @@ class Archive(App):
             if input_title_api.value == "" and input_author_api.value == "" and input_isbn_api.value == "":
                 self.query_one("#book_api_status", Label).update("Please input a minimum of a title, an author, or an ISBN number to search")
             else:
-                api_search = book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
+                book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
                 self.query_one("#book_api_status", Label).update("Search results")
 
     # Navigation through the tabs
