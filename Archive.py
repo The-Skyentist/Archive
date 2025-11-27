@@ -1,5 +1,5 @@
 from textual.app import App, ComposeResult
-from textual.containers import Center, Horizontal
+from textual.containers import Center, VerticalScroll
 from textual.widgets import Header, Footer, Label, TabbedContent, TabPane, Markdown, Input, Button, DataTable
 import sqlite3
 
@@ -53,6 +53,8 @@ class Archive(App):
         # Footer to show keys
         yield Footer()
         yield Header()
+        book_api_table = DataTable()
+        book_api_table.add_columns("Title", "Author", "Published", "ISBN")
 
         def on_mount(self) -> None:
             self.title = "Archive"
@@ -71,13 +73,15 @@ class Archive(App):
                 # Sub tabs to search online for a book to add, or to search through your own collection
                 with TabbedContent("Book Search", "Collection"):
                     with TabPane("Book Search", Label("Find a Book Through an Online Search")):
-                        yield Input(placeholder="Title", type="text", id="book_title_api")
-                        yield Input(placeholder="Author", type="text", id="book_author_api")
-                        yield Input(placeholder="ISBN", type="integer", id="book_isbn_api")
-                        with Center():
-                            yield Button("Search", id="book_search_api")
-                        with Center():
-                            yield Label("", id="book_api_status")                        
+                        yield VerticalScroll(
+                            Input(placeholder="Title", type="text", id="book_title_api"),
+                            Input(placeholder="Author", type="text", id="book_author_api"),
+                            Input(placeholder="ISBN", type="integer", id="book_isbn_api"),
+                            Center(Button("Search", id="book_search_api")),
+                            Center(Label("", id="book_api_status")),
+                            book_api_table,
+                            )
+                            
                     with TabPane("Collection", Label("Search Through Your Personal Collection")):
                         yield Input(placeholder="Title", type="text", id="book_title_personal")
                         yield Input(placeholder="Author", type="text", id="book_author_personal")
