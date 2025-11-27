@@ -1,6 +1,9 @@
 from textual.app import App, ComposeResult
+from textual.containers import Center
 from textual.widgets import Header, Footer, Label, TabbedContent, TabPane, Markdown, Input, Button
 import sqlite3
+
+from library import book_search_api
 
 #Initial connection to database, creation upon initial running of program
 conn = sqlite3.connect("library.db")
@@ -80,12 +83,31 @@ class Archive(App):
                         yield Input(placeholder="Title", type="text", id="book_title_api")
                         yield Input(placeholder="Author", type="text", id="book_author_api")
                         yield Input(placeholder="ISBN", type="integer", id="book_isbn_api")
-                        yield Button("Search", id="book_search_api")
+                        with Center():
+                            yield Button("Search", id="book_search_api")
+                        with Center():
+                            yield Label("", id="status")
                     with TabPane("Collection", Label("Search Through Your Personal Collection")):
                         yield Input(placeholder="Title", type="text", id="book_title_personal")
                         yield Input(placeholder="Author", type="text", id="book_author_personal")
                         yield Input(placeholder="ISBN", type="integer", id="book_isbn_personal")
-                        yield Button("Search", id="book_search_personal")
+                        with Center():
+                            yield Button("Search", id="book_search_personal")
+                            yield Label("", id="status")
+    
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "book_search_api":
+            input_title_api = self.query_one("#book_title_api", Input)
+            input_author_api = self.query_one("#book_author_api", Input)
+            input_isbn_api = self.query_one("#book_isbn_api", Input)
+
+            if input_title_api.value == "" and input_author_api.value == "" and input_isbn_api.value == "":
+                self.query_one("#status", Label).update("Please input a minimum of a title, an author, or an ISBN number to search")
+            else:
+                book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
+                self.query_one("#status", Label).update("Search results")
+
+
 
     # Navigation through the tabs
     def action_show_tab(self, tab: str) -> None:

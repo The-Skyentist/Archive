@@ -6,7 +6,7 @@ APIurl = "https://www.googleapis.com/books/v1/volumes"
 
 # Search online for books using the API based on inputed query data
 # Defaults to empty strings
-def book_search(title = "", author = "", isbn = ""):
+def book_search_api(title = "", author = "", isbn = ""):
     params = {}
     new_params = "q="
 
@@ -21,4 +21,4 @@ def book_search(title = "", author = "", isbn = ""):
     new_params += "+".join("{}{}".format(key,value) for key,value in params.items())
 
     r = requests.get(APIurl, params=new_params)
-    results = r.json()
+    return r.json()
