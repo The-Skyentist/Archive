@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.containers import Center
-from textual.widgets import Header, Footer, Label, TabbedContent, TabPane, Markdown, Input, Button
+from textual.widgets import Header, Footer, Label, TabbedContent, TabPane, Markdown, Input, Button, DataTable
 import sqlite3
 
 from library import book_search_api
@@ -20,6 +20,7 @@ cursor.execute('''
     );
 ''')
 
+# Main tab text and organization set-up
 HOME = """
 # ARCHIVE
 Welcome to the Archive application! This is a tool that can be used to organize 
@@ -37,6 +38,11 @@ LIBRARY = """
 A collection of the books that you own, as well as the ability to add or remove any books from your collection.
 """
 
+
+#Search results base table layout
+BOOK_ROWS = [
+    ("Title", "Author", "Published", "ISBN"),
+]
 # Textual terminal app set-up and declaration. The structure is designed around a tabbed terminal, where each window of the terminal
 # is a different archive section that can be utilized. Each tab is hotkeyed, which is displayed in the footer.
 class Archive(App):
@@ -75,14 +81,24 @@ class Archive(App):
                         yield Input(placeholder="ISBN", type="integer", id="book_isbn_api")
                         with Center():
                             yield Button("Search", id="book_search_api")
+                            yield Button("New Search", id="book_api_reset")
                         with Center():
                             yield Label("", id="status")
+                        with Center():
+                            if len(BOOK_ROWS) > 1:
+                                yield DataTable()
+                                self.query_one(DataTable).cursor_type = "row"
+                                self.query_one(DataTable).zebra_stripes = True
+                                self.query_one(DataTable).add_columns(*BOOK_ROWS[0])
+                                self.query_one(DataTable).add_rows(BOOK_ROWS[1:])
+                        
                     with TabPane("Collection", Label("Search Through Your Personal Collection")):
                         yield Input(placeholder="Title", type="text", id="book_title_personal")
                         yield Input(placeholder="Author", type="text", id="book_author_personal")
                         yield Input(placeholder="ISBN", type="integer", id="book_isbn_personal")
                         with Center():
                             yield Button("Search", id="book_search_personal")
+                        with Center():
                             yield Label("", id="status")
     
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -94,8 +110,19 @@ class Archive(App):
             if input_title_api.value == "" and input_author_api.value == "" and input_isbn_api.value == "":
                 self.query_one("#status", Label).update("Please input a minimum of a title, an author, or an ISBN number to search")
             else:
-                book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
+                api_search = book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
                 self.query_one("#status", Label).update("Search results")
+
+                for 'items' in api_search:
+                    for item in api_search["items"]:
+                        volume_info = item("volumeInfo", {})
+                        title_result = volume_info.get("title")
+                        authors_result = ", ".join(volume_info.get("authors"))
+                        publish_result = item.get("publishedDate")
+                        for identifier in volume_info.get("industryIdentifiers", []):
+                            if identifier.get("type") == "ISBN_13":
+                                isbn_result = identifier.get("identifier")
+                        BOOK_ROWS += (title_result, authors_result, publish_result, isbn_result)
 
 
 
