@@ -9,24 +9,14 @@ from library import book_search_api
 conn = sqlite3.connect("library.db")
 cursor = conn.cursor()
 
-#SQL tables to sort through entries, using ids from each to reduce search sizes
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS genres (
-        id INTEGER PRIMARY KEY,
-        type TEXT NOT NULL
-    );
-''')
-
+#SQL table to sort through entries, using ids from each to reduce search sizes
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS books (
         id PRIMARY KEY,
         title TEXT NOT NULL,
         author TEXT NOT NULL,
         pub_year INTEGER,
-        genre TEXT,
         ISBN INTEGER,
-        FOREIGN KEY (genre)
-        REFERENCES genres(type)
     );
 ''')
 
