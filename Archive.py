@@ -1,5 +1,5 @@
 from textual.app import App, ComposeResult
-from textual.containers import Center
+from textual.containers import Center, Horizontal
 from textual.widgets import Header, Footer, Label, TabbedContent, TabPane, Markdown, Input, Button, DataTable
 import sqlite3
 
@@ -16,7 +16,7 @@ cursor.execute('''
         title TEXT NOT NULL,
         author TEXT NOT NULL,
         pub_year INTEGER,
-        ISBN INTEGER,
+        ISBN INTEGER
     );
 ''')
 
@@ -34,7 +34,7 @@ To exit, please press ctrl+c
 """
 
 LIBRARY = """
-# Library Screen
+# The Library
 A collection of the books that you own, as well as the ability to add or remove any books from your collection.
 """
 
@@ -76,7 +76,6 @@ class Archive(App):
                         yield Input(placeholder="ISBN", type="integer", id="book_isbn_api")
                         with Center():
                             yield Button("Search", id="book_search_api")
-                            yield Button("New Search", id="book_api_reset")
                         with Center():
                             yield Label("", id="book_api_status")                        
                     with TabPane("Collection", Label("Search Through Your Personal Collection")):
@@ -85,7 +84,6 @@ class Archive(App):
                         yield Input(placeholder="ISBN", type="integer", id="book_isbn_personal")
                         with Center():
                             yield Button("Search", id="book_search_personal")
-                            yield Button("New Search", id="book_personal_reset")
                         with Center():
                             yield Label("", id="book_personal_status")
     
