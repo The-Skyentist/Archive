@@ -55,6 +55,7 @@ class Archive(App):
         yield Header()
         book_api_table = DataTable()
         book_api_table.add_columns("Title", "Author", "Published", "ISBN")
+        book_api_table.zebra_stripes = True
 
         def on_mount(self) -> None:
             self.title = "Archive"
@@ -102,6 +103,9 @@ class Archive(App):
             else:
                 book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
                 self.query_one("#book_api_status", Label).update("Search results")
+    
+    def update_search_table(self) -> None:
+        self.query_one("#book_api_status", Label).update("Test")
 
     # Navigation through the tabs
     def action_show_tab(self, tab: str) -> None:
