@@ -104,7 +104,7 @@ class Archive(App):
                 book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
                 self.query_one("#book_api_status", Label).update("Search results")
     
-    def update_search_table(self) -> None:
+    def update_book_search_table(self) -> None:
         self.query_one("#book_api_status", Label).update("Test")
 
     # Navigation through the tabs
