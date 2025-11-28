@@ -38,6 +38,8 @@ LIBRARY = """
 A collection of the books that you own, as well as the ability to add or remove any books from your collection.
 """
 
+BOOK_SEARCH = [("Title", "Author", "Published", "ISBN")]
+
 # Textual terminal app set-up and declaration. The structure is designed around a tabbed terminal, where each window of the terminal
 # is a different archive section that can be utilized. Each tab is hotkeyed, which is displayed in the footer.
 class Archive(App):
@@ -53,9 +55,10 @@ class Archive(App):
         # Footer to show keys
         yield Footer()
         yield Header()
-        book_api_table = DataTable()
-        book_api_table.add_columns("Title", "Author", "Published", "ISBN")
-        book_api_table.zebra_stripes = True
+        book_api_table = DataTable(id="book_api_search_table")
+        book_table = DataTable(id="book_personal_search_table")
+        book_table.add_columns(*BOOK_SEARCH[0])
+        book_table.zebra_stripes = True
 
         def on_mount(self) -> None:
             self.title = "Archive"
@@ -101,11 +104,41 @@ class Archive(App):
             if input_title_api.value == "" and input_author_api.value == "" and input_isbn_api.value == "":
                 self.query_one("#book_api_status", Label).update("Please input a minimum of a title, an author, or an ISBN number to search")
             else:
-                book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
+                self.update_book_search_api()
                 self.query_one("#book_api_status", Label).update("Search results")
     
-    def update_book_search_table(self) -> None:
-        self.query_one("#book_api_status", Label).update("Test")
+    def update_book_search_api(self) -> None:
+        book_table = self.query_one("#book_api_search_table", DataTable)
+        book_table.clear()
+        input_title_api = self.query_one("#book_title_api", Input)
+        input_author_api = self.query_one("#book_author_api", Input)
+        input_isbn_api = self.query_one("#book_isbn_api", Input)
+        search_title = []
+        search_author = []
+        search_pub = []
+        search_isbn = []
+
+        search_results = book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
+        if search_results and "items" in search_results:
+            for item in search_results["items"]:
+                volume_info = item.get("volumeInfo", {})
+                book_title = volume_info.get("title")
+                book_authors = ", ".join(volume_info.get("authors"))
+                book_published = item.get("publishedDate")
+                book_isbn = ""
+                identifiers = volume_info.get("industryIdentifiers", [])
+                for identifier in identifiers:
+                    if identifier.get("type") == "ISBN_13":
+                        book_isbn = identifier.get("identifier")
+                search_title.append(book_title)
+                search_author.append(book_authors)
+                search_pub.append(book_published)
+                search_isbn.append(book_isbn)
+
+        book_table.add_columns(*BOOK_SEARCH[0])
+        book_table.add_rows(list(zip(search_title, search_author, search_pub, search_isbn))[1:])
+        book_table.zebra_stripes = True
+        book_table.cursor_type = "row"
 
     # Navigation through the tabs
     def action_show_tab(self, tab: str) -> None:
