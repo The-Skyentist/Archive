@@ -109,7 +109,7 @@ class Archive(App):
     
     def update_book_search_api(self) -> None:
         book_table = self.query_one("#book_api_search_table", DataTable)
-        book_table.clear()
+        book_table.clear(columns=True)
         input_title_api = self.query_one("#book_title_api", Input)
         input_author_api = self.query_one("#book_author_api", Input)
         input_isbn_api = self.query_one("#book_isbn_api", Input)
