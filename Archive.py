@@ -1,12 +1,12 @@
 from textual.app import App, ComposeResult
-from textual.containers import Center, VerticalScroll
+from textual.containers import Center, VerticalScroll, ScrollableContainer
 from textual.widgets import Header, Footer, Label, TabbedContent, TabPane, Markdown, Input, Button, DataTable
 import sqlite3
 
 from library import book_search_api
 
 #Initial connection to database, creation upon initial running of program
-conn = sqlite3.connect("library.db")
+conn = sqlite3.connect("Archive.db")
 cursor = conn.cursor()
 
 #SQL table to sort through entries, using ids from each to reduce search sizes
@@ -77,13 +77,15 @@ class Archive(App):
                 # Sub tabs to search online for a book to add, or to search through your own collection
                 with TabbedContent("Book Search", "Collection"):
                     with TabPane("Book Search", Label("Find a Book Through an Online Search")):
-                        yield VerticalScroll(
+                        yield ScrollableContainer(
                             Input(placeholder="Title", type="text", id="book_title_api"),
                             Input(placeholder="Author", type="text", id="book_author_api"),
                             Input(placeholder="ISBN", type="integer", id="book_isbn_api"),
                             Center(Button("Search", id="book_search_api")),
                             Center(Label("", id="book_api_status")),
                             book_api_table,
+                            Center(Label("", id="book_api_search_error1")),
+                            Center(Label("", id="book_api_search_error2"))
                             )
                             
                     with TabPane("Collection", Label("Search Through Your Personal Collection")):
@@ -106,6 +108,7 @@ class Archive(App):
             else:
                 self.update_book_search_api()
                 self.query_one("#book_api_status", Label).update("Search results")
+                self.query_one("#book_api_search_error1", Label).update("")
     
     def update_book_search_api(self) -> None:
         book_table = self.query_one("#book_api_search_table", DataTable)
@@ -118,27 +121,31 @@ class Archive(App):
         search_pub = []
         search_isbn = []
 
-        search_results = book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
-        if search_results and "items" in search_results:
-            for item in search_results["items"]:
-                volume_info = item.get("volumeInfo", {})
-                book_title = volume_info.get("title")
-                book_authors = ", ".join(volume_info.get("authors"))
-                book_published = item.get("publishedDate")
-                book_isbn = ""
-                identifiers = volume_info.get("industryIdentifiers", [])
-                for identifier in identifiers:
-                    if identifier.get("type") == "ISBN_13":
-                        book_isbn = identifier.get("identifier")
-                search_title.append(book_title)
-                search_author.append(book_authors)
-                search_pub.append(book_published)
-                search_isbn.append(book_isbn)
+        try:
+            search_results = book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
+            if search_results and "items" in search_results:
+                for item in search_results["items"]:
+                    volume_info = item.get("volumeInfo")
+                    book_title = volume_info.get("title")
+                    book_authors = ", ".join(volume_info.get("authors"))
+                    book_published = volume_info.get("publishedDate")
+                    book_isbn = ""
+                    identifiers = volume_info.get("industryIdentifiers", [])
+                    for identifier in identifiers:
+                        if identifier.get("type") == "ISBN_13" or identifier.get("type") == "ISBN_10":
+                            book_isbn = identifier.get("identifier")
+                    search_title.append(book_title)
+                    search_author.append(book_authors)
+                    search_pub.append(book_published)
+                    search_isbn.append(book_isbn)
 
-        book_table.add_columns(*BOOK_SEARCH[0])
-        book_table.add_rows(list(zip(search_title, search_author, search_pub, search_isbn))[1:])
-        book_table.zebra_stripes = True
-        book_table.cursor_type = "row"
+            book_table.add_columns(*BOOK_SEARCH[0])
+            book_table.add_rows(list(zip(search_title, search_author, search_pub, search_isbn))[1:])
+            book_table.zebra_stripes = True
+            book_table.cursor_type = "row"
+        except Exception as e:
+            self.query_one("#book_api_search_error1", Label).update(f"An unexpected error occured: {e}") 
+            self.query_one("#book_api_search_error1", Label).update("There may be a missing value in the API search. Please be more specific.")
 
     # Navigation through the tabs
     def action_show_tab(self, tab: str) -> None:

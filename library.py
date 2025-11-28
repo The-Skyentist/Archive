@@ -1,5 +1,11 @@
 import requests
+import sqlite3
+
+
 # This script contains the functions to search for books through your collection or through Google Reads API
+
+conn = sqlite3.connect("Archive.db")
+cursor = conn.cursor()
 
 # Initial API URL set up
 APIurl = "https://www.googleapis.com/books/v1/volumes"
