@@ -38,7 +38,7 @@ LIBRARY = """
 A collection of the books that you own, as well as the ability to add or remove any books from your collection.
 """
 
-BOOK_SEARCH = [("Title", "Author", "Published", "ISBN")]
+BOOK_SEARCH = [("Title", "Author", "Published", "ISBN10", "ISBN13")]
 
 # Textual terminal app set-up and declaration. The structure is designed around a tabbed terminal, where each window of the terminal
 # is a different archive section that can be utilized. Each tab is hotkeyed, which is displayed in the footer.
@@ -80,7 +80,7 @@ class Archive(App):
                         yield ScrollableContainer(
                             Input(placeholder="Title", type="text", id="book_title_api"),
                             Input(placeholder="Author", type="text", id="book_author_api"),
-                            Input(placeholder="ISBN", type="integer", id="book_isbn_api"),
+                            Input(placeholder="ISBN", type="text", id="book_isbn_api"),
                             Center(Button("Search", id="book_search_api")),
                             Center(Label("", id="book_api_status")),
                             book_api_table,
@@ -119,7 +119,8 @@ class Archive(App):
         search_title = []
         search_author = []
         search_pub = []
-        search_isbn = []
+        search_isbn10 = []
+        search_isbn13 = []
 
         try:
             search_results = book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
@@ -129,18 +130,18 @@ class Archive(App):
                     book_title = volume_info.get("title")
                     book_authors = ", ".join(volume_info.get("authors"))
                     book_published = volume_info.get("publishedDate")
-                    book_isbn = ""
                     identifiers = volume_info.get("industryIdentifiers", [])
                     for identifier in identifiers:
-                        if identifier.get("type") == "ISBN_13" or identifier.get("type") == "ISBN_10":
-                            book_isbn = identifier.get("identifier")
+                        if identifier.get("type") == "ISBN_13":
+                            search_isbn13.append(identifier.get("identifier"))
+                        elif identifier.get("type") == "ISBN_10":
+                            search_isbn10.append(identifier.get("identifier"))
                     search_title.append(book_title)
                     search_author.append(book_authors)
                     search_pub.append(book_published)
-                    search_isbn.append(book_isbn)
 
             book_table.add_columns(*BOOK_SEARCH[0])
-            book_table.add_rows(list(zip(search_title, search_author, search_pub, search_isbn))[1:])
+            book_table.add_rows(list(zip(search_title, search_author, search_pub, search_isbn10, search_isbn13))[0:])
             book_table.zebra_stripes = True
             book_table.cursor_type = "row"
         except Exception as e:
