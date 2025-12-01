@@ -3,7 +3,7 @@ from textual.containers import Center, VerticalScroll, ScrollableContainer
 from textual.widgets import Header, Footer, Label, TabbedContent, TabPane, Markdown, Input, Button, DataTable
 import sqlite3
 
-from library import book_search_api
+from library import book_search_api, book_api_search_results
 
 #Initial connection to database, creation upon initial running of program
 conn = sqlite3.connect("Archive.db")
@@ -50,6 +50,12 @@ class Archive(App):
         ("l", "show_tab('library')", "Library"),
     ]
 
+    CSS = """
+    TabbedContent, DataTable {
+        height: 1fr
+    }
+    """
+
     def compose(self) -> ComposeResult:
         # Composing the app with tabbed content
         # Footer to show keys
@@ -77,16 +83,14 @@ class Archive(App):
                 # Sub tabs to search online for a book to add, or to search through your own collection
                 with TabbedContent("Book Search", "Collection"):
                     with TabPane("Book Search", Label("Find a Book Through an Online Search")):
-                        yield ScrollableContainer(
-                            Input(placeholder="Title", type="text", id="book_title_api"),
-                            Input(placeholder="Author", type="text", id="book_author_api"),
-                            Input(placeholder="ISBN", type="text", id="book_isbn_api"),
-                            Center(Button("Search", id="book_search_api")),
-                            Center(Label("", id="book_api_status")),
-                            book_api_table,
-                            Center(Label("", id="book_api_search_error1")),
-                            Center(Label("", id="book_api_search_error2"))
-                            )
+                        yield Input(placeholder="Title", type="text", id="book_title_api")
+                        yield Input(placeholder="Author", type="text", id="book_author_api")
+                        yield Input(placeholder="ISBN", type="text", id="book_isbn_api")
+                        yield Center(Button("Search", id="book_search_api"))
+                        yield Center(Label("", id="book_api_status"))
+                        yield book_api_table
+                        yield Center(Label("", id="book_api_search_error1"))
+                        yield Center(Label("", id="book_api_search_error2"))
                             
                     with TabPane("Collection", Label("Search Through Your Personal Collection")):
                         yield Input(placeholder="Title", type="text", id="book_title_personal")
@@ -102,13 +106,14 @@ class Archive(App):
             input_title_api = self.query_one("#book_title_api", Input)
             input_author_api = self.query_one("#book_author_api", Input)
             input_isbn_api = self.query_one("#book_isbn_api", Input)
+            self.query_one("#book_api_search_error1", Label).update("") 
+            self.query_one("#book_api_search_error2", Label).update("")
 
             if input_title_api.value == "" and input_author_api.value == "" and input_isbn_api.value == "":
                 self.query_one("#book_api_status", Label).update("Please input a minimum of a title, an author, or an ISBN number to search")
             else:
                 self.update_book_search_api()
                 self.query_one("#book_api_status", Label).update("Search results")
-                self.query_one("#book_api_search_error1", Label).update("")
     
     def update_book_search_api(self) -> None:
         book_table = self.query_one("#book_api_search_table", DataTable)
@@ -116,37 +121,16 @@ class Archive(App):
         input_title_api = self.query_one("#book_title_api", Input)
         input_author_api = self.query_one("#book_author_api", Input)
         input_isbn_api = self.query_one("#book_isbn_api", Input)
-        search_title = []
-        search_author = []
-        search_pub = []
-        search_isbn10 = []
-        search_isbn13 = []
-
-        try:
-            search_results = book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
-            if search_results and "items" in search_results:
-                for item in search_results["items"]:
-                    volume_info = item.get("volumeInfo")
-                    book_title = volume_info.get("title")
-                    book_authors = ", ".join(volume_info.get("authors"))
-                    book_published = volume_info.get("publishedDate")
-                    identifiers = volume_info.get("industryIdentifiers", [])
-                    for identifier in identifiers:
-                        if identifier.get("type") == "ISBN_13":
-                            search_isbn13.append(identifier.get("identifier"))
-                        elif identifier.get("type") == "ISBN_10":
-                            search_isbn10.append(identifier.get("identifier"))
-                    search_title.append(book_title)
-                    search_author.append(book_authors)
-                    search_pub.append(book_published)
-
+        search_input = book_search_api(input_title_api.value, input_author_api.value, input_isbn_api.value)
+        search_results = book_api_search_results(search_input)
+        if type(search_results) == TypeError:
+            self.query_one("#book_api_search_error1", Label).update(f"An unexpected error occured: {search_results}") 
+            self.query_one("#book_api_search_error2", Label).update("There may be a missing value in the API search. Please be more specific.")
+        else:
             book_table.add_columns(*BOOK_SEARCH[0])
-            book_table.add_rows(list(zip(search_title, search_author, search_pub, search_isbn10, search_isbn13))[0:])
+            book_table.add_rows(search_results[0:])
             book_table.zebra_stripes = True
             book_table.cursor_type = "row"
-        except Exception as e:
-            self.query_one("#book_api_search_error1", Label).update(f"An unexpected error occured: {e}") 
-            self.query_one("#book_api_search_error1", Label).update("There may be a missing value in the API search. Please be more specific.")
 
     # Navigation through the tabs
     def action_show_tab(self, tab: str) -> None:
