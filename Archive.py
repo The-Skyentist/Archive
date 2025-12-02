@@ -16,7 +16,8 @@ cursor.execute('''
         title TEXT NOT NULL,
         author TEXT NOT NULL,
         pub_year INTEGER,
-        ISBN INTEGER
+        ISBN13 INTEGER,
+        ISBN10 INTEGER
     );
 ''')
 
@@ -38,7 +39,7 @@ LIBRARY = """
 A collection of the books that you own, as well as the ability to add or remove any books from your collection.
 """
 
-BOOK_SEARCH = [("Title", "Author", "Published", "ISBN10", "ISBN13")]
+BOOK_SEARCH = [("Title", "Author", "Published", "ISBN13", "ISBN10")]
 
 # Textual terminal app set-up and declaration. The structure is designed around a tabbed terminal, where each window of the terminal
 # is a different archive section that can be utilized. Each tab is hotkeyed, which is displayed in the footer.
