@@ -1,5 +1,7 @@
 from textual.app import App, ComposeResult
-from textual.containers import Center, VerticalScroll, ScrollableContainer
+from textual.containers import Center, Grid
+from textual.screen import ModalScreen
+from textual.reactive import reactive
 from textual.widgets import Header, Footer, Label, TabbedContent, TabPane, Markdown, Input, Button, DataTable
 import sqlite3
 
@@ -48,7 +50,7 @@ class Archive(App):
     # Footer key bindings for easier navigation around terminal
     BINDINGS = [
         ("h", "show_tab('home')", "Home"),
-        ("l", "show_tab('library')", "Library"),
+        ("l", "show_tab('library')", "Library")
     ]
 
     CSS = """
@@ -72,7 +74,7 @@ class Archive(App):
 
         # Adding tabbed content
         with TabbedContent(initial="home"): # Sets the home tab as the initial starting point
-
+            
             # The home screen page, containing text as to how to navigate and exit
             with TabPane("Home", id="home"):
                 yield Markdown(HOME)
@@ -83,7 +85,7 @@ class Archive(App):
 
                 # Sub tabs to search online for a book to add, or to search through your own collection
                 with TabbedContent("Book Search", "Collection"):
-                    with TabPane("Book Search", Label("Find a Book Through an Online Search")):
+                    with TabPane("Book Search", Label("Find a Book Through an Online Search"), id = "apibook_tab"):
                         yield Input(placeholder="Title", type="text", id="book_title_api")
                         yield Input(placeholder="Author", type="text", id="book_author_api")
                         yield Input(placeholder="ISBN", type="text", id="book_isbn_api")
@@ -93,7 +95,7 @@ class Archive(App):
                         yield Center(Label("", id="book_api_search_error1"))
                         yield Center(Label("", id="book_api_search_error2"))
                             
-                    with TabPane("Collection", Label("Search Through Your Personal Collection")):
+                    with TabPane("Collection", Label("Search Through Your Personal Collection"), id = "personalbook_tab"):
                         yield Input(placeholder="Title", type="text", id="book_title_personal")
                         yield Input(placeholder="Author", type="text", id="book_author_personal")
                         yield Input(placeholder="ISBN", type="integer", id="book_isbn_personal")
@@ -136,7 +138,8 @@ class Archive(App):
     # Navigation through the tabs
     def action_show_tab(self, tab: str) -> None:
         self.get_child_by_type(TabbedContent).active = tab
-
+    
+        
 if __name__ == "__main__":
     app = Archive()
     app.run()
