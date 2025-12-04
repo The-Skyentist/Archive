@@ -7,7 +7,6 @@ import sqlite3
 conn = sqlite3.connect("Archive.db")
 cursor = conn.cursor()
 
-
 # Initial API URL set up
 APIurl = "https://www.googleapis.com/books/v1/volumes"
 
@@ -55,3 +54,13 @@ def book_api_search_results(search_json):
         return list(zip(search_title, search_author, search_pub, search_isbn13, search_isbn10))
     except Exception as e:
         return e
+
+def add_to_collection(result):
+    title = result[1]
+    author = result[2]
+    pub = result[3]
+    isbn13 = result[4]
+    isbn10 = result[5]
+
+    cursor.execute("INSERT INTO book_list (title, author, pub, isbn13, isbn10) VALUES (?, ?)",
+                    (title, author, pub, isbn13, isbn10))
