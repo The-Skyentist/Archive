@@ -75,7 +75,7 @@ class Add_Screen(ModalScreen):
     """
     def compose(self) -> ComposeResult:
         with Container():
-            yield Label("Add currently selected book to your collection?")
+            yield Label("Add book to your collection?")
             yield Label("", id = "book_choice")
             with Horizontal():
                 yield Button("Yes", id = "add_api_book")
@@ -106,7 +106,6 @@ class Archive(App):
     }
     """
 
-
     def compose(self) -> ComposeResult:
         # Composing the app with tabbed content
         # Footer to show keys
@@ -116,8 +115,6 @@ class Archive(App):
         book_table = DataTable(id="book_personal_search_table")
         book_table.add_columns(*BOOK_SEARCH[0])
         book_table.zebra_stripes = True
-
-        #active = self.query_one("#archive", TabbedContent).reactive("", init = False)
 
         def on_mount(self) -> None:
             self.title = "Archive"
@@ -158,8 +155,7 @@ class Archive(App):
             input_title_api = self.query_one("#book_title_api", Input)
             input_author_api = self.query_one("#book_author_api", Input)
             input_isbn_api = self.query_one("#book_isbn_api", Input)
-            self.query_one("#book_api_search_error1", Label).update("") 
-            self.query_one("#book_api_search_error2", Label).update("")
+            self.query_one("#book_api_search_error", Label).update("") 
 
             if input_title_api.value == "" and input_author_api.value == "" and input_isbn_api.value == "":
                 self.query_one("#book_api_status", Label).update("Please input a minimum of a title, an author, or an ISBN number to search")

@@ -55,12 +55,12 @@ def book_api_search_results(search_json):
     except Exception as e:
         return e
 
-def add_to_collection(result):
-    title = result[1]
-    author = result[2]
-    pub = result[3]
-    isbn13 = result[4]
-    isbn10 = result[5]
+# def add_to_collection(result):
+#     title = result[1]
+#     author = result[2]
+#     pub = result[3]
+#     isbn13 = result[4]
+#     isbn10 = result[5]
 
-    cursor.execute("INSERT INTO book_list (title, author, pub, isbn13, isbn10) VALUES (?, ?)",
-                    (title, author, pub, isbn13, isbn10))
+#     cursor.execute("INSERT INTO book_list (title, author, pub, isbn13, isbn10) VALUES (?, ?)",
+#                     (title, author, pub, isbn13, isbn10))
