@@ -73,17 +73,22 @@ class Add_Screen(ModalScreen):
         margin: 2 4;
     }
     """
+    def __init__(self, book):
+        self.book = book
+        super().__init__()
+    
+
     def compose(self) -> ComposeResult:
         with Container():
             yield Label("Add book to your collection?")
-            yield Label("", id = "book_choice")
+            yield Label(f"{self.book}", id = "book_info")
             with Horizontal():
                 yield Button("Yes", id = "add_api_book")
                 yield Button("No", id = "cancel_api_book")
 
     @on(Button.Pressed, "#add_api_book")
     def add_api_book(self) -> None:
-        self.query_one("#book_choice", Label).update("Test Successful")
+        self.query_one("#book_info", Label).update("Test Successful")
 
     @on(Button.Pressed, "#cancel_api_book")
     def cancel_api_book(self) -> None:
@@ -105,6 +110,7 @@ class Archive(App):
         height: 1fr
     }
     """
+    book_row_info = reactive("")
 
     def compose(self) -> ComposeResult:
         # Composing the app with tabbed content
@@ -180,13 +186,19 @@ class Archive(App):
             book_table.zebra_stripes = True
             book_table.cursor_type = "row"
 
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        table = self.query_one("#book_api_search_table", DataTable)
+        self.book_row_info = table.get_row(event.row_key)
+    
     # Navigation through the tabs
     def action_show_tab(self, tab: str) -> None:
         self.get_child_by_type(TabbedContent).active = tab
     
     def action_add_book(self) -> None:
-        self.push_screen(Add_Screen())
-    
+        if self.book_row_info == "":
+            self.push_screen(Add_Screen("Please select a book to add."))
+        else:
+            self.push_screen(Add_Screen(self.book_row_info))
         
 if __name__ == "__main__":
     app = Archive()
