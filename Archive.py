@@ -44,6 +44,7 @@ A collection of the books that you own, as well as the ability to add or remove 
 
 BOOK_SEARCH = [("Title", "Author", "Published", "ISBN13", "ISBN10")]
 
+# Modal pop-up screen to add items to your collection 
 class Add_Screen(ModalScreen):
 
     CSS = """
@@ -73,11 +74,12 @@ class Add_Screen(ModalScreen):
         margin: 2 4;
     }
     """
+
+    # Takes input from selected search results
     def __init__(self, book):
         self.book = book
         super().__init__()
     
-
     def compose(self) -> ComposeResult:
         with Container():
             yield Label("Add book to your collection?")
@@ -86,10 +88,12 @@ class Add_Screen(ModalScreen):
                 yield Button("Yes", id = "add_api_book")
                 yield Button("No", id = "cancel_api_book")
 
+    # Takes results and adds to your collection
     @on(Button.Pressed, "#add_api_book")
     def add_api_book(self) -> None:
         self.query_one("#book_info", Label).update("Test Successful")
 
+    # Closes the screen
     @on(Button.Pressed, "#cancel_api_book")
     def cancel_api_book(self) -> None:
         self.app.pop_screen()
@@ -111,6 +115,7 @@ class Archive(App):
     }
     """
     book_row_info = reactive("")
+    active_current = reactive("", init = None)
 
     def compose(self) -> ComposeResult:
         # Composing the app with tabbed content
@@ -137,7 +142,7 @@ class Archive(App):
                 yield Markdown(LIBRARY)
 
                 # Sub tabs to search online for a book to add, or to search through your own collection
-                with TabbedContent("Book Search", "Collection"):
+                with TabbedContent("Book Search", "Collection", id = "book_tabs"):
                     with TabPane("Book Search", Label("Find a Book Through an Online Search"), id = "apibook_tab"):
                         yield Input(placeholder="Title", type="text", id="book_title_api")
                         yield Input(placeholder="Author", type="text", id="book_author_api")
@@ -156,6 +161,7 @@ class Archive(App):
                         with Center():
                             yield Label("", id="book_personal_status")
     
+    # Initial search through API for books, while checking if inputs are present
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "book_search_api":
             input_title_api = self.query_one("#book_title_api", Input)
@@ -169,6 +175,7 @@ class Archive(App):
                 self.update_book_search_api()
                 self.query_one("#book_api_status", Label).update("Search results")
     
+    # Return results of search for books with API based on inputs
     def update_book_search_api(self) -> None:
         book_table = self.query_one("#book_api_search_table", DataTable)
         book_table.clear(columns=True)
@@ -186,6 +193,7 @@ class Archive(App):
             book_table.zebra_stripes = True
             book_table.cursor_type = "row"
 
+    # Get results from search to add to collection
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         table = self.query_one("#book_api_search_table", DataTable)
         self.book_row_info = table.get_row(event.row_key)
@@ -194,11 +202,12 @@ class Archive(App):
     def action_show_tab(self, tab: str) -> None:
         self.get_child_by_type(TabbedContent).active = tab
     
+    # Start pop-up to add book to collection if one is selected
     def action_add_book(self) -> None:
-        if self.book_row_info == "":
-            self.push_screen(Add_Screen("Please select a book to add."))
-        else:
+        if self.book_row_info != "":
             self.push_screen(Add_Screen(self.book_row_info))
+        else:
+            return
         
 if __name__ == "__main__":
     app = Archive()

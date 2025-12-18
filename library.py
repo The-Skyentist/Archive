@@ -12,6 +12,7 @@ APIurl = "https://www.googleapis.com/books/v1/volumes"
 
 # Search online for books using the API based on inputed query data
 # Defaults to empty strings
+# First takes inputs and preps them for api search
 def book_search_api(title = "", author = "", isbn = ""):
     params = {}
     new_params = "q="
@@ -29,6 +30,7 @@ def book_search_api(title = "", author = "", isbn = ""):
     r = requests.get(APIurl, params=new_params)
     return r.json()
 
+# Searches the API based on inputs once they are verified, checking for errors
 def book_api_search_results(search_json):
     search_title = []
     search_author = []
@@ -55,12 +57,13 @@ def book_api_search_results(search_json):
     except Exception as e:
         return e
 
-# def add_to_collection(result):
-#     title = result[1]
-#     author = result[2]
-#     pub = result[3]
-#     isbn13 = result[4]
-#     isbn10 = result[5]
+# Add selected search result to collection
+def add_to_collection(result):
+    title = result[0]
+    author = result[1]
+    pub = result[2]
+    isbn13 = result[3]
+    isbn10 = result[4]
 
-#     cursor.execute("INSERT INTO book_list (title, author, pub, isbn13, isbn10) VALUES (?, ?)",
-#                     (title, author, pub, isbn13, isbn10))
+    cursor.execute("INSERT INTO book_list (title, author, pub, isbn13, isbn10) VALUES (?, ?)",
+                    (title, author, pub, isbn13, isbn10))
