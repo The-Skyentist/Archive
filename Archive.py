@@ -6,7 +6,7 @@ from textual.widgets import Header, Footer, Label, TabbedContent, TabPane, Markd
 from textual import on
 import sqlite3
 
-from library import book_search_api, book_api_search_results
+from library import book_search_api, book_api_search_results, add_book_to_collection
 
 #Initial connection to database, creation upon initial running of program
 conn = sqlite3.connect("Archive.db")
@@ -23,6 +23,8 @@ cursor.execute('''
         ISBN10 TEXT
     );
 ''')
+
+conn.close()
 
 # Main tab text and organization set-up
 HOME = """
@@ -91,7 +93,8 @@ class Add_Screen(ModalScreen):
     # Takes results and adds to your collection
     @on(Button.Pressed, "#add_api_book")
     def add_api_book(self) -> None:
-        self.query_one("#book_info", Label).update("Test Successful")
+        add_book_to_collection(self.book)
+        self.query_one("#book_info", Label).update("Book Added")
 
     # Closes the screen
     @on(Button.Pressed, "#cancel_api_book")
@@ -123,9 +126,7 @@ class Archive(App):
         yield Footer()
         yield Header()
         book_api_table = DataTable(id="book_api_search_table")
-        book_table = DataTable(id="book_personal_search_table")
-        book_table.add_columns(*BOOK_SEARCH[0])
-        book_table.zebra_stripes = True
+        book_personal_table = DataTable(id="book_personal_search_table")
 
         def on_mount(self) -> None:
             self.title = "Archive"
@@ -178,7 +179,7 @@ class Archive(App):
     # Return results of search for books with API based on inputs
     def update_book_search_api(self) -> None:
         book_table = self.query_one("#book_api_search_table", DataTable)
-        book_table.clear(columns=True)
+        book_table.clear(columns = True)
         input_title_api = self.query_one("#book_title_api", Input)
         input_author_api = self.query_one("#book_author_api", Input)
         input_isbn_api = self.query_one("#book_isbn_api", Input)
@@ -192,6 +193,16 @@ class Archive(App):
             book_table.add_rows(search_results[0:])
             book_table.zebra_stripes = True
             book_table.cursor_type = "row"
+    
+    # Return results of search for books within personal collection based on inputs
+    def update_book_search_personal(self) -> None:
+        book_table = self.query_one("#book_personal_search_table", DataTable)
+        book_table.clear(columns = True)
+        input_title_personal = self.query_one("#book_title_personal", Input)
+        input_author_personal = self.query_one("#book_author_personal", Input)
+        input_isbn_personal = self.query_one("#book_isbn_personal", Input)
+        book_table.add_columns(*BOOK_SEARCH[0])
+        book_table.zebra_stripes = True
 
     # Get results from search to add to collection
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:

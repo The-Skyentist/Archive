@@ -4,9 +4,6 @@ import sqlite3
 
 # This script contains the functions to search for books through your collection or through Google Reads API
 
-conn = sqlite3.connect("Archive.db")
-cursor = conn.cursor()
-
 # Initial API URL set up
 APIurl = "https://www.googleapis.com/books/v1/volumes"
 
@@ -58,12 +55,17 @@ def book_api_search_results(search_json):
         return e
 
 # Add selected search result to collection
-def add_to_collection(result):
+def add_book_to_collection(result):
     title = result[0]
     author = result[1]
     pub = result[2]
     isbn13 = result[3]
     isbn10 = result[4]
 
-    cursor.execute("INSERT INTO book_list (title, author, pub, isbn13, isbn10) VALUES (?, ?)",
+    conn = sqlite3.connect("Archive.db")
+    cursor = conn.cursor()
+
+    cursor.execute("INSERT INTO book_list (title, author, pub, isbn13, isbn10) VALUES (?, ?, ?, ?, ?)",
                     (title, author, pub, isbn13, isbn10))
+    
+    conn.close()
