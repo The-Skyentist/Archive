@@ -5,26 +5,9 @@ from textual.reactive import reactive
 from textual.widgets import Header, Footer, Label, TabbedContent, TabPane, Markdown, Input, Button, DataTable
 from textual import on
 import sqlite3
+import time
 
 from library import book_search_api, book_api_search_results, add_book_to_collection
-
-#Initial connection to database, creation upon initial running of program
-conn = sqlite3.connect("Archive.db")
-cursor = conn.cursor()
-
-#SQL table to sort through entries, using ids from each to reduce search sizes
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS book_list (
-        id PRIMARY KEY,
-        title TEXT NOT NULL,
-        author TEXT NOT NULL,
-        pub_year TEXT,
-        ISBN13 TEXT,
-        ISBN10 TEXT
-    );
-''')
-
-conn.close()
 
 # Main tab text and organization set-up
 HOME = """
@@ -95,6 +78,8 @@ class Add_Screen(ModalScreen):
     def add_api_book(self) -> None:
         add_book_to_collection(self.book)
         self.query_one("#book_info", Label).update("Book Added")
+        time.sleep(3)
+        self.app.pop_screen()
 
     # Closes the screen
     @on(Button.Pressed, "#cancel_api_book")
@@ -104,6 +89,24 @@ class Add_Screen(ModalScreen):
 # Textual terminal app set-up and declaration. The structure is designed around a tabbed terminal, where each window of the terminal
 # is a different archive section that can be utilized. Each tab is hotkeyed, which is displayed in the footer.
 class Archive(App):
+    #Initial connection to database, creation upon initial running of program
+    conn = sqlite3.connect("Archive.db")
+    cursor = conn.cursor()
+
+    #SQL table to sort through entries, using ids from each to reduce search sizes
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS book_list (
+            id PRIMARY KEY,
+            title TEXT NOT NULL,
+            author TEXT NOT NULL,
+            pub_year TEXT,
+            ISBN13 TEXT,
+            ISBN10 TEXT
+        );
+    ''')
+
+    conn.commit()
+    conn.close()
 
     # Footer key bindings for easier navigation around terminal
     BINDINGS = [

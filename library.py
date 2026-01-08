@@ -62,10 +62,16 @@ def add_book_to_collection(result):
     isbn13 = result[3]
     isbn10 = result[4]
 
-    conn = sqlite3.connect("Archive.db")
-    cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect("Archive.db")
+        cursor = conn.cursor()
 
-    cursor.execute("INSERT INTO book_list (title, author, pub, isbn13, isbn10) VALUES (?, ?, ?, ?, ?)",
-                    (title, author, pub, isbn13, isbn10))
+        cursor.execute('''INSERT INTO book_list (title, author, pub, isbn13, isbn10) VALUES (?, ?, ?, ?, ?)''',
+                        (title, author, pub, isbn13, isbn10))
+        
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        return e
     
-    conn.close()
+    
